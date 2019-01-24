@@ -4,18 +4,20 @@ use std::fmt::Error;
 
 pub const MAX_NUM: usize = 9;
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq, Clone)]
 pub enum Cell {
     Given(i32),
-    //Solved(i32),
+    Solved(i32),
+    Possible(Vec<i32>),
     Empty,
-    //Possible(Vec<i32>),
 }
 
 impl Display for Cell {
     fn fmt(&self, f: &mut Formatter) -> Result<(), Error> {
         match self {
             Cell::Given(num) => write!(f, "{}", num),
+            Cell::Solved(num) => write!(f, "{}", num),
+            Cell::Possible(_) => write!(f, " "),
             Cell::Empty => write!(f, " "),
         }
     }
@@ -26,7 +28,7 @@ impl Display for Cell {
 /// of cells.
 /// `field[y][x]`
 pub struct Field {
-    cells: Vec<Vec<Cell>>
+    pub cells: Vec<Vec<Cell>>
 }
 
 impl Field {
