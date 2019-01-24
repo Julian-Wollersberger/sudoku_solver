@@ -1,19 +1,20 @@
 use std::str::FromStr;
 use std::error::Error;
 use std::string::String;
-use crate::Cell;
-use crate::MAX_NUM;
+use crate::field::Cell;
+use crate::field::Field;
+use crate::field::MAX_NUM;
 
 /// Parse a string that is in a Comma-Separated-Values format
 /// with 9 rows and columns into a 2D array of Cells.
-fn parse_csv(input: String) -> Result<Vec<Vec<Cell>>, String> {
+pub fn parse_csv(input: String) -> Result<Field, String> {
     let mut cells: Vec<Vec<Cell>> = Vec::with_capacity(MAX_NUM);
     
     for line in input.split('\n') {
-        println!("line: {}", line);
+        //println!("line: {}", line);
         let mut line_parsed = Vec::with_capacity(MAX_NUM);
         for cell in line.split(',') {
-            print!("\t{}",cell);
+            //print!("\t{}",cell);
             line_parsed.push(
                 parse_cell(cell)?
             );
@@ -24,7 +25,7 @@ fn parse_csv(input: String) -> Result<Vec<Vec<Cell>>, String> {
                 line_parsed.len(), MAX_NUM));
         }
         cells.push(line_parsed);
-        println!();
+        //println!();
     };
     
     if cells.len() != MAX_NUM {
@@ -33,7 +34,7 @@ fn parse_csv(input: String) -> Result<Vec<Vec<Cell>>, String> {
             cells.len(), MAX_NUM));
     }
     
-    Ok(cells)
+    Ok(Field::new_with(cells))
 }
 
 /// Parse one CSV cell to a ´Cell´
@@ -58,7 +59,7 @@ fn parse_cell(cell: &str) -> Result<Cell, String> {
 }
 
 /* CSV-Format zum einlesen. */
-const EXAMPLE: &str =
+pub const EXAMPLE: &str =
     "_,5,_,9,_,_,3,7,_
 1,8,9,_,4,_,_,6,5
 3,_,_,_,_,_,_,4,_
@@ -71,10 +72,10 @@ _,1,8,_,_,3,_,5,_";
 
 #[cfg(test)]
 mod test {
-    use crate::Cell;
     use crate::csv_parser::parse_cell;
     use crate::csv_parser::parse_csv;
     use crate::csv_parser::EXAMPLE;
+    use crate::field::Cell;
     
     #[test]
     fn parse_cell_test() {

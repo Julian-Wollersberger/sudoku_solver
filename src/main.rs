@@ -1,16 +1,12 @@
+use crate::csv_parser::parse_csv;
+use crate::csv_parser::EXAMPLE;
+
 mod csv_parser;
+mod field;
+mod solver;
 
 // Für jede Zelle eine Liste der noch möglichen Zahlen, die passen könnten.
 // Wenn nur eine übrig bleibt, dann ist diese fix.
-const MAX_NUM: usize = 9;
-
-#[derive(Debug, Eq, PartialEq)]
-enum Cell {
-    Given(i32),
-    //Solved(i32),
-    Empty,
-    //Possible(Vec<i32>),
-}
 
 fn main() {
     parse_csv(EXAMPLE.into()).expect("Parsing failed");
