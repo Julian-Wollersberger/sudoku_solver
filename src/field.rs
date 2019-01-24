@@ -2,21 +2,26 @@ use std::fmt::Display;
 use std::fmt::Formatter;
 use std::fmt::Error;
 
+/// The greatest number possible in the sudoku field.
+/// The smallest number is hardcoded as 1.
 pub const MAX_NUM: usize = 9;
+/// Height and width of the sudoku field.
+pub const SIZE: usize = MAX_NUM;
+/// height and width of one sudoku block. The sudoku field
+/// consists of 3*3 blocks.
+pub const BLOCK_SIZE: usize = 3; //sqrt(SIZE)
 
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub enum Cell {
-    Given(i32),
-    Solved(i32),
-    Possible(Vec<i32>),
+    Known(i32),
     Empty,
+    Possible(Vec<i32>),
 }
 
 impl Display for Cell {
     fn fmt(&self, f: &mut Formatter) -> Result<(), Error> {
         match self {
-            Cell::Given(num) => write!(f, "{}", num),
-            Cell::Solved(num) => write!(f, "{}", num),
+            Cell::Known(num) => write!(f, "{}", num),
             Cell::Possible(_) => write!(f, " "),
             Cell::Empty => write!(f, " "),
         }
