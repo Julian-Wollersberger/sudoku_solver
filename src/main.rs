@@ -1,6 +1,6 @@
 use crate::csv_parser::parse_csv;
 use crate::csv_parser::EXAMPLE;
-use crate::solver::solve_sudoku;
+use crate::solver::sudoku_solver::solve_sudoku;
 
 mod csv_parser;
 mod field;
