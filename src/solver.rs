@@ -5,15 +5,33 @@ use crate::field::SIZE;
 use crate::field::BLOCK_SIZE;
 
 pub fn solve_sudoku(field: Field) -> Result<Field, String> {
-    let field = field;
+    let mut new_field = Field::empty();
+    let mut new_known_cells = 0;
     
-    for (y, row) in field.cells.iter().enumerate() {
-        for (x, cell) in row.iter().enumerate() {
-            let possible = find_possibilities(&field, x, y)?;
+    for y in 0..SIZE {
+        for x in 0..SIZE {
+            
+            let mut possible = find_possibilities(&field, x, y)?;
+            // Convert single possibility to Known.
+            match possible {
+                Cell::Known(_) => {},
+                Cell::Empty =>
+                    return Err("find_possibilities() shouldn't return Cell::Empty".to_owned()),
+                Cell::Possible(vec) => if vec.len() == 1 {
+                    new_known_cells += 1;
+                    possible = Cell::Known(vec[0]);
+                    println!("Solved cell at ({}|{}) to be {}", x,y, vec[0])
+                } else {
+                    // Needed to move the vec back.
+                    possible = Cell::Possible(vec)
+                }
+            }
+            new_field.cells[y][x] = possible;
         }
     }
     
-    unimplemented!()
+    println!("Solved {} cells in total", new_known_cells);
+    Ok(new_field)
 }
 
 /// Find all numbers that fit at the given position,

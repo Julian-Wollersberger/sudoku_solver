@@ -1,5 +1,6 @@
 use crate::csv_parser::parse_csv;
 use crate::csv_parser::EXAMPLE;
+use crate::solver::solve_sudoku;
 
 mod csv_parser;
 mod field;
@@ -9,7 +10,8 @@ mod solver;
 // Wenn nur eine übrig bleibt, dann ist diese fix.
 
 fn main() {
-    parse_csv(EXAMPLE.into()).expect("Parsing failed");
+    let sudoku = parse_csv(EXAMPLE.into()).expect("Parsing failed");
+    println!("{}", solve_sudoku(sudoku).unwrap());
 }
 
 

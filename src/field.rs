@@ -42,24 +42,35 @@ impl Field {
             cells
         }
     }
+    pub fn empty() -> Field {
+        let mut cells = Vec::with_capacity(SIZE);
+        for _ in 0..SIZE {
+            // Initialise with `Cell::Empty`
+            let mut line = Vec::with_capacity(SIZE);
+            line.extend((0..SIZE).map(|_| Cell::Empty));
+            cells.push(line);
+        }
+        
+        Field { cells }
+    }
 }
 
 impl Display for Field {
     fn fmt(&self, f: &mut Formatter) -> Result<(), Error> {
-        writeln!(f, "\n+-----+-----+-----+");
+        writeln!(f, "\n+-----+-----+-----+")?;
         //writeln!(f, "|1 2 3|4 5 6|7 8 9|");
         
         for (i, line) in (&self.cells).iter().enumerate() {
-            write!(f, "|");
+            write!(f, "|")?;
             for (j, cell) in line.iter().enumerate() {
-                write!(f, "{}", cell);
+                write!(f, "{}", cell)?;
                 
                 if j % 3 == 2 {
-                    write!(f, "|");
-                } else { write!(f, " "); }
+                    write!(f, "|")?;
+                } else { write!(f, " ")?; }
             }
-            write!(f, "\n");
-            if i % 3 == 2 { writeln!(f, "+-----+-----+-----+"); }
+            write!(f, "\n")?;
+            if i % 3 == 2 { writeln!(f, "+-----+-----+-----+")?; }
         }
         
         Ok(())
