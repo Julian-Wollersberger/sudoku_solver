@@ -70,11 +70,14 @@ impl Display for Field {
 mod test {
     use crate::csv_parser::parse_csv;
     use crate::csv_parser::EXAMPLE;
+    use crate::field::SIZE;
+    use crate::field::MAX_NUM;
+    use crate::field::BLOCK_SIZE;
     
     #[test]
     fn display_test() {
         let field = parse_csv(EXAMPLE.into()).expect("Parsing failed");
-        //println!("{}", field);
+        println!("{}", field);
         assert_eq!(format!("{}", field), "
 +-----+-----+-----+
 |  5  |9    |3 7  |
@@ -90,6 +93,12 @@ mod test {
 |  1 8|    3|  5  |
 +-----+-----+-----+
 ")
+    }
+    
+    #[test]
+    fn constant_assertions() {
+        assert_eq!(MAX_NUM, SIZE);
+        assert_eq!(BLOCK_SIZE as f64, (SIZE as f64).sqrt());
     }
 }
 

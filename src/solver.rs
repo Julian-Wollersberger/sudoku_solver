@@ -2,14 +2,23 @@ use crate::field::Field;
 use crate::field::Cell;
 use crate::field::MAX_NUM;
 use crate::field::SIZE;
+use crate::field::BLOCK_SIZE;
 
-pub fn solve_sudoku(field: Field) -> Field {
+pub fn solve_sudoku(field: Field) -> Result<Field, String> {
+    let field = field;
+    
+    for (y, row) in field.cells.iter().enumerate() {
+        for (x, cell) in row.iter().enumerate() {
+            let possible = find_possibilities(&field, x, y)?;
+        }
+    }
+    
     unimplemented!()
 }
 
-/// For each number, test if it can be in
-/// the specified empty cell.
-/// Ignore given and solved cells.
+/// Find all numbers that fit at the given position,
+/// according to the sudoku rules.
+/// Ignore already known cells.
 /// Borrowing the field immutable and returning an owned result enables multi-threading.
 fn find_possibilities(field: &Field, x: usize, y: usize) -> Result<Cell, String> {
     let cell = &field.cells[y][x];
@@ -22,25 +31,65 @@ fn find_possibilities(field: &Field, x: usize, y: usize) -> Result<Cell, String>
     // Possible optimisation: for Cell::Possible iterate over the
     // vector instead of iterating over all numbers.
     
-    for num in 1..MAX_NUM {
-        
+    // Optimisation: first use stack-allocated array with max size
+    // and later heap-allocate vec with necessary size. TODO benchmark it.
+    let mut len = 0;
+    let mut possible = [0i32; MAX_NUM];
+    
+    for num in 1..=MAX_NUM {
+        if check(num, field, x,y) {
+            possible[len] = num as i32;
+            len += 1;
+        }
     }
     
+    if len <= 0 {
+        Err(format!("No possibilities found at ({}|{})", x, y))
     
-    Err("unimplemented!()".to_owned())
+    // If we check it here, the calling function can't know
+    // if we made progress.
+    /*} else if len == 1 {
+        // Hurray, we found it!
+        Ok(Cell::Known(possible[0]))
+    */
+    } else {
+        // Allocate vec on heap with right size.
+        let vec = Vec::from(&possible[..len]);
+        debug_assert_eq!(vec.len(), vec.capacity());
+    
+        Ok(Cell::Possible(vec))
+    }
 }
 
+/// For a single number check if that same number is
+/// already somewhere in the row, column or block of
+/// the given cell position.
 fn check(num: usize, field: &Field, x: usize, y: usize) -> bool {
     // check line
     for i in 0..SIZE-1 {
-        if i != x  // ignore current cell
-            && field.cells[y][i] == Cell::Known(num as i32)
-        {
-            return false
+        if field.cells[y][i] == Cell::Known(num as i32) {
+            return false;
         }
     }
     // check column
-    // check block
+    for j in 0..SIZE-1 {
+        if field.cells[j][x] == Cell::Known(num as i32) {
+            return false;
+        }
+    }
+    // check the 3*3 block
+    let block_x = x - (x % BLOCK_SIZE);
+    let block_y = y - (y % BLOCK_SIZE);
+    
+    for i in block_x ..= block_x+2 {
+        for j in block_y ..= block_y+2 {
+            if field.cells[j][i] == Cell::Known(num as i32) {
+                return false;
+            }
+        }
+    }
+    
+    // no check fails
     true
 }
 
@@ -51,15 +100,33 @@ mod test {
     use crate::csv_parser::EXAMPLE;
     use crate::solver::find_possibilities;
     use crate::field::Cell;
+    use crate::solver::check;
     
     #[test]
     fn find_possibilities_test() {
         let mut field = parse_csv(EXAMPLE.into()).expect("Parsing failed");
-        field.cells[3][1] = Cell::Known(4);
+
+        assert_eq!(find_possibilities(&field, 0,0), Ok(Cell::Possible(vec![2,4,6])));
+        assert_eq!(find_possibilities(&field, 8,8), Ok(Cell::Possible(vec![2,9])));
+        assert_eq!(find_possibilities(&field, 5,3), Ok(Cell::Possible(vec![1,2,4,7])));
         
-        assert_eq!(find_possibilities(&field, 1,3), Ok(Cell::Known(4)));
         assert_eq!(find_possibilities(&field, 1,0), Ok(Cell::Known(5)));
-        //assert_eq!(find_possibilities(&field, 8,8), TODO Test last entry.);
+        field.cells[3][1] = Cell::Known(3);
+        assert_eq!(find_possibilities(&field, 1,3), Ok(Cell::Known(3)));
+    }
+    
+    #[test]
+    fn check_test() {
+        let field = parse_csv(EXAMPLE.into()).expect("Parsing failed");
+        
+        assert_eq!(check(8, &field, 3,8), false); //row
+        assert_eq!(check(1, &field, 8,0), false); //column
+        assert_eq!(check(6, &field, 6,5), false); //block
+        
+        assert_eq!(check(7, &field, 7,7), false);
+        assert_eq!(check(3, &field, 1,4), false);
+        assert_eq!(check(4, &field, 3,3), true);
+        assert_eq!(check(2, &field, 4,1), true);
     }
 }
 
