@@ -3,15 +3,37 @@ use crate::field::Cell;
 use crate::field::MAX_NUM;
 use crate::field::SIZE;
 use crate::field::BLOCK_SIZE;
+use std::mem;
 
 pub fn solve_sudoku(field: Field) -> Result<Field, String> {
+    let mut field = field;
     let mut new_field = Field::empty();
+    let mut total_progress = 0;
+    
+    loop {
+        let progress= solve_step(&field, &mut new_field)?;
+        total_progress += progress;
+        if progress <= 0 {
+            println!("Solved {} cells in total.", total_progress);
+            return Ok(new_field)
+        }
+        
+        mem::swap(&mut field, &mut new_field);
+    }
+}
+
+/// Do one iteration to try to solve the sudoku:
+/// First find all possibilities,
+/// then if only one possibility exists, replace with Cell:Known.
+/// TODO additional elimination algorithm.
+/// Returns number of solved cells.
+fn solve_step(field: &Field, new_field: &mut Field) -> Result<i32, String> {
     let mut new_known_cells = 0;
     
     for y in 0..SIZE {
         for x in 0..SIZE {
             
-            let mut possible = find_possibilities(&field, x, y)?;
+            let mut possible = find_possibilities(field, x, y)?;
             // Convert single possibility to Known.
             match possible {
                 Cell::Known(_) => {},
@@ -30,13 +52,12 @@ pub fn solve_sudoku(field: Field) -> Result<Field, String> {
         }
     }
     
-    println!("Solved {} cells in total", new_known_cells);
-    Ok(new_field)
+    println!("Solved {} cells.", new_known_cells);
+    Ok(new_known_cells)
 }
 
 /// Find all numbers that fit at the given position,
 /// according to the sudoku rules.
-/// Ignore already known cells.
 /// Borrowing the field immutable and returning an owned result enables multi-threading.
 fn find_possibilities(field: &Field, x: usize, y: usize) -> Result<Cell, String> {
     let cell = &field.cells[y][x];
@@ -119,6 +140,26 @@ mod test {
     use crate::solver::find_possibilities;
     use crate::field::Cell;
     use crate::solver::check;
+    use crate::field::Field;
+    use crate::solver::solve_step;
+    
+    #[ignore]
+    #[test]
+    fn solve_example_completely() {
+        let field = parse_csv(EXAMPLE.into()).expect("Parsing failed");
+        unimplemented!();
+    }
+        
+    #[test]
+    fn solve_step_test() {
+        let field = parse_csv(EXAMPLE.into()).expect("Parsing failed");
+        let mut new_field = Field::empty();
+        
+        let progress = solve_step(&field, &mut new_field).unwrap();
+        assert!(progress >= 1);
+        //  I haven't tested if the solver misses some cells.
+        assert_eq!(new_field.cells[1][6], Cell::Known(2))
+    }
     
     #[test]
     fn find_possibilities_test() {

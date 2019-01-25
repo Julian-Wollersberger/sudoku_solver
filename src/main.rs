@@ -20,5 +20,12 @@ fn main() {
 // If no number fits, -> impossible
 
 
-
-
+/*
+/// This is the program entry point to a
+/// program that prints "Hello, World".
+fn main() {
+    /* This is a comment that says "Prints "Hello World"" */
+    // Prints "Hello World"
+    println!("Hello, World");
+}
+*/

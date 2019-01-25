@@ -31,7 +31,7 @@ impl Display for Cell {
 /// The field consists of an array
 /// of lines that consist of an array
 /// of cells.
-/// `field[y][x]`
+/// Axises: `field[y][x]`
 pub struct Field {
     pub cells: Vec<Vec<Cell>>
 }
@@ -84,6 +84,8 @@ mod test {
     use crate::field::SIZE;
     use crate::field::MAX_NUM;
     use crate::field::BLOCK_SIZE;
+    use crate::field::Field;
+    use std::mem;
     
     #[test]
     fn display_test() {
@@ -110,6 +112,11 @@ mod test {
     fn constant_assertions() {
         assert_eq!(MAX_NUM, SIZE);
         assert_eq!(BLOCK_SIZE as f64, (SIZE as f64).sqrt());
+        
+        // mem::swap on fields should be very cheep,
+        // because it should be heap-allocated.
+        //println!("Size of `Field` is {}", mem::size_of::<Field>())
+        assert_eq!(mem::size_of::<Field>(), 24) //three times usize
     }
 }
 
