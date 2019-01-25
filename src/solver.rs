@@ -33,22 +33,37 @@ fn solve_step(field: &Field, new_field: &mut Field) -> Result<i32, String> {
     for y in 0..SIZE {
         for x in 0..SIZE {
             
+            // 1. What numbers are allowed here?
             let mut possible = find_possibilities(field, x, y)?;
-            // Convert single possibility to Known.
+            // 2. Convert single possibility to Known.
             match possible {
                 Cell::Known(_) => {},
                 Cell::Empty =>
                     return Err("find_possibilities() shouldn't return Cell::Empty".to_owned()),
-                Cell::Possible(vec) => if vec.len() == 1 {
-                    new_known_cells += 1;
-                    possible = Cell::Known(vec[0]);
-                    println!("Solved cell at ({}|{}) to be {}", x,y, vec[0])
-                } else {
-                    // Needed to move the vec back.
-                    possible = Cell::Possible(vec)
+                Cell::Possible(vec) => {
+                    // TODO move this mess into a function.
+                    if vec.len() == 1 {
+                        new_known_cells += 1;
+                        possible = Cell::Known(vec[0]);
+                        println!("Solved cell at ({}|{}) to be {}", x,y, vec[0])
+                    } else {
+                        //TODO 3. Is this the only cell in a row/column/block
+                        // where a number is possible?
+                        for num in &vec {
+                            if is_only_one(num.clone(), field, x,y) {
+                                //TODO
+                            }
+                        }
+                        
+                        // Needed to move the vec back.
+                        possible = Cell::Possible(vec)
+                    }
                 }
             }
             new_field.cells[y][x] = possible;
+            
+            
+            
         }
     }
     
@@ -75,9 +90,9 @@ fn find_possibilities(field: &Field, x: usize, y: usize) -> Result<Cell, String>
     let mut len = 0;
     let mut possible = [0i32; MAX_NUM];
     
-    for num in 1..=MAX_NUM {
+    for num in 1..=MAX_NUM as i32 {
         if check(num, field, x,y) {
-            possible[len] = num as i32;
+            possible[len] = num;
             len += 1;
         }
     }
@@ -103,16 +118,16 @@ fn find_possibilities(field: &Field, x: usize, y: usize) -> Result<Cell, String>
 /// For a single number check if that same number is
 /// already somewhere in the row, column or block of
 /// the given cell position.
-fn check(num: usize, field: &Field, x: usize, y: usize) -> bool {
+fn check(num: i32, field: &Field, x: usize, y: usize) -> bool {
     // check line
     for i in 0..SIZE-1 {
-        if field.cells[y][i] == Cell::Known(num as i32) {
+        if field.cells[y][i] == Cell::Known(num) {
             return false;
         }
     }
     // check column
     for j in 0..SIZE-1 {
-        if field.cells[j][x] == Cell::Known(num as i32) {
+        if field.cells[j][x] == Cell::Known(num) {
             return false;
         }
     }
@@ -122,7 +137,7 @@ fn check(num: usize, field: &Field, x: usize, y: usize) -> bool {
     
     for i in block_x ..= block_x+2 {
         for j in block_y ..= block_y+2 {
-            if field.cells[j][i] == Cell::Known(num as i32) {
+            if field.cells[j][i] == Cell::Known(num) {
                 return false;
             }
         }
@@ -131,6 +146,54 @@ fn check(num: usize, field: &Field, x: usize, y: usize) -> bool {
     // no check fails
     true
 }
+
+/// Is this the only cell in a row/column/block
+/// where the number is allowed?
+fn is_only_one(num: i32, field: &Field, x: usize, y: usize) -> bool {
+    // check line
+    for i in 0..SIZE-1 {
+        if other_cell_contains_num(&field.cells[y][i], num) {
+            return false;
+        }
+    }
+    // check column
+    for j in 0..SIZE-1 {
+        if other_cell_contains_num(&field.cells[j][x], num) {
+            return false;
+        }
+    }
+    // check the 3*3 block
+    let block_x = x - (x % BLOCK_SIZE);
+    let block_y = y - (y % BLOCK_SIZE);
+    
+    for i in block_x ..= block_x+2 {
+        for j in block_y ..= block_y+2 {
+            if other_cell_contains_num(&field.cells[j][i], num) {
+                return false;
+            }
+        }
+    }
+    
+    true
+}
+
+/// De-duplicates this `match cell {}`.
+fn other_cell_contains_num(cell: &Cell, num: i32) -> bool {
+    match cell {
+        Cell::Possible(vec) => {
+            if vec.contains(&num) {
+                return true;
+            }
+        },
+        Cell::Empty => {
+            eprintln!("Empty Cells shouldn't exist in other_cell_contains_num()!");
+            return true; // Be conservative
+        },
+        _ => {}
+    }
+    false
+}
+
 
 
 #[cfg(test)]
@@ -149,7 +212,7 @@ mod test {
         let field = parse_csv(EXAMPLE.into()).expect("Parsing failed");
         unimplemented!();
     }
-        
+    
     #[test]
     fn solve_step_test() {
         let field = parse_csv(EXAMPLE.into()).expect("Parsing failed");
