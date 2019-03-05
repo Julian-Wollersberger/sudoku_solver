@@ -44,7 +44,7 @@ fn other_cell_contains_num(cell: &Cell, num: i32) -> bool {
         Cell::Empty => {
             // Happens in the first iteration, because is_only_one()
             // doesn't ignore itself.
-            eprintln!("Empty Cells shouldn't exist in other_cell_contains_num()!");
+            // eprintln!("Empty Cells shouldn't exist in other_cell_contains_num()!");
             return true; // Be conservative
         },
         Cell::Known(known) => {

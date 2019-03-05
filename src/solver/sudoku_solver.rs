@@ -18,13 +18,14 @@ pub fn solve_sudoku(field: Field) -> Result<Field, String> {
             return Ok(new_field)
         }
         
+        print!("Old field:\n{}New field:\n{}", field, new_field);
         mem::swap(&mut field, &mut new_field);
     }
 }
 
 /// Do one iteration to try to solve the sudoku:
 /// First find all possibilities,
-/// then if only one possibility exists, replace with Cell:Known.
+/// then if only one possibility exists, replace with Cell::Known.
 /// TODO additional elimination algorithm.
 /// Returns number of solved cells.
 fn solve_step(field: &Field, new_field: &mut Field) -> Result<i32, String> {
@@ -34,30 +35,18 @@ fn solve_step(field: &Field, new_field: &mut Field) -> Result<i32, String> {
         for x in 0..SIZE {
             
             // 1. What numbers are allowed here?
-            let mut possible = find_possibilities(field, x, y)?;
+            let (mut possible, new) = find_possibilities(field, x, y)?;
+            new_known_cells += new;
             // 2. Convert single possibility to Known.
             match possible {
                 Cell::Known(_) => {},
                 Cell::Empty =>
                     return Err("find_possibilities() shouldn't return Cell::Empty".to_owned()),
                 Cell::Possible(vec) => {
-                    // TODO move this mess into a function.
-                    if vec.len() == 1 {
-                        new_known_cells += 1;
-                        possible = Cell::Known(vec[0]);
-                        println!("Solved cell at ({}|{}) to be {}", x,y, vec[0])
-                    } else {
-                        //TODO 3. Is this the only cell in a row/column/block
-                        // where a number is possible?
-                        for num in &vec {
-                            if is_only_one(num.clone(), field, x,y) {
-                                //TODO
-                            }
-                        }
-                        
-                        // Needed to move the vec back.
-                        possible = Cell::Possible(vec)
-                    }
+                    let new = try_solve_possibilities(vec, &field, x,y)?;
+                    possible = new.0;
+                    //Fixme Never returns 0
+                    new_known_cells += new.1;
                 }
             }
             new_field.cells[y][x] = possible;
@@ -68,7 +57,23 @@ fn solve_step(field: &Field, new_field: &mut Field) -> Result<i32, String> {
     Ok(new_known_cells)
 }
 
-
+// 2. Convert single possibility to Known.
+fn try_solve_possibilities(
+    possibilities: Vec<i32>,
+    field: &Field, x: usize, y: usize
+) -> Result<(Cell, i32), String>
+{
+    //TODO 3. Is this the only cell in a row/column/block
+    // where a number is possible?
+    for num in &possibilities {
+        if is_only_one(num.clone(), field, x,y) {
+            //TODO
+        }
+    }
+    
+    // Needed to move the vec back.
+    Ok((Cell::Possible(possibilities), 0))
+}
 
 
 #[cfg(test)]
@@ -78,6 +83,7 @@ mod test {
     use crate::field::Cell;
     use crate::field::Field;
     use crate::solver::sudoku_solver::solve_step;
+    use crate::field::SIZE;
     
     #[ignore]
     #[test]
@@ -94,7 +100,19 @@ mod test {
         let progress = solve_step(&field, &mut new_field).unwrap();
         assert!(progress >= 1);
         //  I haven't tested if the solver misses some cells.
-        assert_eq!(new_field.cells[1][6], Cell::Known(2))
+        assert_eq!(new_field.cells[1][6], Cell::Known(2));
+        
+        // It can't solve more cells than total cells,
+        // otherwise counting doesn't work.
+        let mut total_progress = 0;
+        for _ in 0..SIZE*SIZE {
+            let progress = solve_step(&field, &mut new_field).unwrap();
+            total_progress += progress;
+        }
+        println!("Total progress: {}", total_progress);
+        assert!(total_progress as usize <= SIZE*SIZE);
+        // more heuristic:
+        assert!(total_progress <= 70);
     }
 }
 

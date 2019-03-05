@@ -6,13 +6,14 @@ use crate::field::BLOCK_SIZE;
 
 /// Find all numbers that fit at the given position,
 /// according to the sudoku rules.
+/// Returns 1 if Possible was converted to Known, 0 otherwise.
 /// Borrowing the field immutable and returning an owned result enables multi-threading.
-pub fn find_possibilities(field: &Field, x: usize, y: usize) -> Result<Cell, String> {
+pub fn find_possibilities(field: &Field, x: usize, y: usize) -> Result<(Cell, i32), String> {
     let cell = &field.cells[y][x];
     
     // Nothing must be computed for given and solved cells.
     match cell {
-        Cell::Known(_) => return Ok(cell.clone()),
+        Cell::Known(_) => return Ok((cell.clone(), 0)),
         _ => {}
     }
     // Possible optimisation: for Cell::Possible iterate over the
@@ -33,18 +34,18 @@ pub fn find_possibilities(field: &Field, x: usize, y: usize) -> Result<Cell, Str
     if len <= 0 {
         Err(format!("No possibilities found at ({}|{})", x, y))
         
-        // If we check it here, the calling function can't know
-        // if we made progress.
-        /*} else if len == 1 {
-            // Hurray, we found it!
-            Ok(Cell::Known(possible[0]))
-        */
+    // If we check it here, the calling function can't know
+    // if we made progress.
+    } else if len == 1 {
+        // Hurray, we found it!
+        Ok((Cell::Known(possible[0]), 1))
+        
     } else {
         // Allocate vec on heap with right size.
         let vec = Vec::from(&possible[..len]);
         debug_assert_eq!(vec.len(), vec.capacity());
         
-        Ok(Cell::Possible(vec))
+        Ok((Cell::Possible(vec),0))
     }
 }
 
@@ -93,13 +94,15 @@ mod test {
     fn find_possibilities_test() {
         let mut field = parse_csv(EXAMPLE.into()).expect("Parsing failed");
         
-        assert_eq!(find_possibilities(&field, 0,0), Ok(Cell::Possible(vec![2,4,6])));
-        assert_eq!(find_possibilities(&field, 8,8), Ok(Cell::Possible(vec![2,9])));
-        assert_eq!(find_possibilities(&field, 5,3), Ok(Cell::Possible(vec![1,2,4,7])));
-        
-        assert_eq!(find_possibilities(&field, 1,0), Ok(Cell::Known(5)));
+        assert_eq!(find_possibilities(&field, 0,0), Ok((Cell::Possible(vec![2,4,6]), 0)));
+        assert_eq!(find_possibilities(&field, 8,8), Ok((Cell::Possible(vec![2,9]), 0)));
+        assert_eq!(find_possibilities(&field, 5,3), Ok((Cell::Possible(vec![1,2,4,7]), 0)));
+        // Solved in find_possibilities
+        assert_eq!(find_possibilities(&field, 6,1), Ok((Cell::Known(2), 1)));
+        // Known from beginning
+        assert_eq!(find_possibilities(&field, 1,0), Ok((Cell::Known(5), 0)));
         field.cells[3][1] = Cell::Known(3);
-        assert_eq!(find_possibilities(&field, 1,3), Ok(Cell::Known(3)));
+        assert_eq!(find_possibilities(&field, 1,3), Ok((Cell::Known(3), 0)));
     }
     
     #[test]

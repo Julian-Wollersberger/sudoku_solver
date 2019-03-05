@@ -46,12 +46,12 @@ fn parse_cell(cell: &str) -> Result<Cell, String> {
         other => {
             match i32::from_str(other) {
                 Ok(number) => if number <= MAX_NUM as i32 && number >= 1 {
-                    Ok(Cell::Known(number))
-                } else {
-                    return Err(format!("Error while parsing the CSV input. \
-                        The number must be between 1 and {} but was {}.",
-                        MAX_NUM, number));
-                },
+                        Ok(Cell::Known(number))
+                    } else {
+                        return Err(format!("Error while parsing the CSV input. \
+                            The number must be between 1 and {} but was {}.",
+                            MAX_NUM, number));
+                    },
                 Err(err) =>
                     return Err(String::from(err.description()))
             }
