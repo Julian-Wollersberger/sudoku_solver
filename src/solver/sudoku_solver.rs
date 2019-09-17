@@ -63,11 +63,12 @@ fn try_solve_possibilities(
     field: &Field, x: usize, y: usize
 ) -> Result<(Cell, i32), String>
 {
-    //TODO 3. Is this the only cell in a row/column/block
+    // 3. Is this the only cell in a row/column/block
     // where a number is possible?
     for num in &possibilities {
-        if is_only_one(num.clone(), field, x,y) {
-            //TODO
+        if is_only_one(*num, field, x,y) {
+            return Ok((Cell::Known(*num), 1));
+            // Why did I make this return a Result? When can this fail?
         }
     }
     
@@ -112,7 +113,7 @@ mod test {
         println!("Total progress: {}", total_progress);
         assert!(total_progress as usize <= SIZE*SIZE);
         // more heuristic:
-        assert!(total_progress <= 70);
+        assert!(dbg!(total_progress) <= 70);
     }
 }
 

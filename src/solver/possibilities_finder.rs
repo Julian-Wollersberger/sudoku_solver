@@ -32,10 +32,8 @@ pub fn find_possibilities(field: &Field, x: usize, y: usize) -> Result<(Cell, i3
     }
     
     if len <= 0 {
-        Err(format!("No possibilities found at ({}|{})", x, y))
+        Err(format!("No possibilities found at ({}|{}). This sudoku is unsolvable.", x, y))
         
-    // If we check it here, the calling function can't know
-    // if we made progress.
     } else if len == 1 {
         // Hurray, we found it!
         Ok((Cell::Known(possible[0]), 1))
