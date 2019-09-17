@@ -45,7 +45,7 @@ fn solve_step(field: &Field, new_field: &mut Field) -> Result<i32, String> {
                 Cell::Possible(vec) => {
                     let new = try_solve_possibilities(vec, &field, x,y)?;
                     possible = new.0;
-                    //Fixme Never returns 0
+                    //Fixme Always returns 0
                     new_known_cells += new.1;
                 }
             }
@@ -85,6 +85,7 @@ mod test {
     use crate::field::Field;
     use crate::solver::sudoku_solver::solve_step;
     use crate::field::SIZE;
+    use std::mem;
     
     #[ignore]
     #[test]
@@ -95,7 +96,7 @@ mod test {
     
     #[test]
     fn solve_step_test() {
-        let field = parse_csv(EXAMPLE.into()).expect("Parsing failed");
+        let mut field = parse_csv(EXAMPLE.into()).expect("Parsing failed");
         let mut new_field = Field::empty();
         
         let progress = solve_step(&field, &mut new_field).unwrap();
@@ -108,12 +109,13 @@ mod test {
         let mut total_progress = 0;
         for _ in 0..SIZE*SIZE {
             let progress = solve_step(&field, &mut new_field).unwrap();
+            mem::swap(&mut field, &mut new_field);
             total_progress += progress;
         }
         println!("Total progress: {}", total_progress);
         assert!(total_progress as usize <= SIZE*SIZE);
         // more heuristic:
-        assert!(dbg!(total_progress) <= 70);
+        assert!(total_progress <= 70);
     }
 }
 
