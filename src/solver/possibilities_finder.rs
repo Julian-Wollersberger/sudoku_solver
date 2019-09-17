@@ -36,6 +36,7 @@ pub fn find_possibilities(field: &Field, x: usize, y: usize) -> Result<(Cell, i3
         
     } else if len == 1 {
         // Hurray, we found it!
+        eprintln!("Found cell at ({}|{})", x, y);
         Ok((Cell::Known(possible[0]), 1))
         
     } else {
@@ -50,15 +51,16 @@ pub fn find_possibilities(field: &Field, x: usize, y: usize) -> Result<(Cell, i3
 /// For a single number check if that same number is
 /// already somewhere in the row, column or block of
 /// the given cell position.
+/// Returns true if num is possible.
 fn check(num: i32, field: &Field, x: usize, y: usize) -> bool {
     // check line
-    for i in 0..SIZE-1 {
+    for i in 0..SIZE {
         if field.cells[y][i] == Cell::Known(num) {
             return false;
         }
     }
     // check column
-    for j in 0..SIZE-1 {
+    for j in 0..SIZE {
         if field.cells[j][x] == Cell::Known(num) {
             return false;
         }
@@ -106,6 +108,7 @@ mod test {
     #[test]
     fn check_test() {
         let field = parse_csv(EXAMPLE.into()).expect("Parsing failed");
+        println!("{}", field);
         
         assert_eq!(check(8, &field, 3,8), false); //row
         assert_eq!(check(1, &field, 8,0), false); //column
@@ -115,5 +118,10 @@ mod test {
         assert_eq!(check(3, &field, 1,4), false);
         assert_eq!(check(4, &field, 3,3), true);
         assert_eq!(check(2, &field, 4,1), true);
+    
+        // There was a off-by-one error in check line & column
+        assert_eq!(check(6, &field, 8,0), false);
+        assert_eq!(check(5, &field, 0,8), false);
+        assert_eq!(check(1, &field, 5,6), false);
     }
 }

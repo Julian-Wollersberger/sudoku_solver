@@ -5,32 +5,36 @@ use crate::field::Field;
 
 /// Is this the only cell in a row/column/block
 /// where the number is allowed?
-pub fn is_only_one(num: i32, field: &Field, x: usize, y: usize) -> bool {
+pub fn unique_in_line_column_or_block(num: i32, field: &Field, x: usize, y: usize) -> bool {
     // check line
+    let mut unique_in_line = true;
     for i in 0..SIZE-1 {
         if other_cell_contains_num(&field.cells[y][i], num) {
-            return false;
+            unique_in_line = false;
         }
     }
     // check column
+    let mut unique_in_column = true;
     for j in 0..SIZE-1 {
         if other_cell_contains_num(&field.cells[j][x], num) {
-            return false;
+            unique_in_column = false;
         }
     }
     // check the 3*3 block
+    let mut unique_in_block = true;
     let block_x = x - (x % BLOCK_SIZE);
     let block_y = y - (y % BLOCK_SIZE);
     
     for i in block_x ..= block_x+2 {
         for j in block_y ..= block_y+2 {
             if other_cell_contains_num(&field.cells[j][i], num) {
-                return false;
+                unique_in_block = false;
             }
         }
     }
-    
-    true
+    // If the number is unique in one of line, column or block,
+    // then that number must be in this position.
+    unique_in_line || unique_in_column || unique_in_block
 }
 
 /// De-duplicates this `match cell {}`.
