@@ -53,7 +53,7 @@ fn solve_step(field: &Field, new_field: &mut Field) -> Result<i32, String> {
         }
     }
     
-    println!("Solved {} cells.", new_known_cells);
+    eprintln!("Solved {} cells.", new_known_cells);
     Ok(new_known_cells)
 }
 
@@ -108,6 +108,7 @@ mod test {
         // otherwise counting doesn't work.
         let mut total_progress = 0;
         for _ in 0..SIZE*SIZE {
+            println!("{:#5.}", &field);
             let progress = solve_step(&field, &mut new_field).unwrap();
             mem::swap(&mut field, &mut new_field);
             total_progress += progress;
