@@ -11,6 +11,7 @@ mod solver;
 
 fn main() {
     let sudoku = parse_csv(EXAMPLE.into()).expect("Parsing failed");
+    println!("Unsolved sudoku: {}", sudoku);
     println!("{}", solve_sudoku(sudoku).unwrap());
 }
 
